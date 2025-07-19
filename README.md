@@ -1,4 +1,29 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# BlockcertsWallet
+
+A React Native mobile application for managing and verifying blockchain-based digital certificates using the Blockcerts standard. This wallet allows users to import, store, verify, and display digital credentials securely on their mobile devices.
+
+## Features
+
+- 📱 **Cross-platform**: Runs on both iOS and Android
+- 🔗 **Blockcerts Integration**: Full support for Blockcerts verification
+- 📄 **PDF Support**: Enhanced PDF credential display with thumbnail generation
+- 🔍 **QR Code Scanning**: Import credentials via QR codes
+- 📱 **URL Import**: Import credentials from web URLs
+- 🔐 **Secure Storage**: Encrypted local storage for credentials
+- ✅ **Verification**: Real-time credential verification
+- 🏢 **Issuer Management**: Manage trusted credential issuers
+- 📊 **Wallet Management**: Create, backup, and restore wallets
+
+## Key Technologies
+
+- **React Native 0.80.1** - Cross-platform mobile development
+- **@blockcerts/cert-verifier-js** - Blockcerts verification engine
+- **Ethers.js** - Ethereum wallet and blockchain integration
+- **React Navigation** - Screen navigation
+- **AsyncStorage** - Persistent data storage
+- **react-native-pdf-thumbnail** - PDF handling with iOS optimizations
+
+This is a [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
 
