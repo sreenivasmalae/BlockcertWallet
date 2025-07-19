@@ -35,6 +35,22 @@ local.properties
 !debug.keystore
 .kotlin/
 
+# Large binary files and build outputs
+*.so
+*.apk
+*.aab
+*.dex
+*.jar
+**/intermediates/
+**/outputs/
+**/obj/
+**/libs/
+**/build/intermediates/
+**/build/outputs/
+**/build/generated/
+android/app/build/
+ios/build/
+
 # node.js
 #
 node_modules/
