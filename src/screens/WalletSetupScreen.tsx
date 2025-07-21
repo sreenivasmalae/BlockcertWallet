@@ -7,10 +7,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  TouchableOpacity,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Card } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { WalletService } from '../services/WalletService';
 
 interface WalletSetupScreenProps {
@@ -24,6 +28,8 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
   const [confirmPassword, setConfirmPassword] = useState('');
   const [mnemonic, setMnemonic] = useState('');
   const [showImport, setShowImport] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState('');
 
   const validatePassword = (): boolean => {
     if (password.length < 8) {
@@ -44,16 +50,10 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
     try {
       const wallet = await WalletService.createWallet(password);
       
-      Alert.alert(
-        'Wallet Created Successfully!',
-        `Your wallet address: ${wallet.address}\n\nPlease save your recovery phrase safely. You will need it to restore your wallet.`,
-        [
-          {
-            text: 'Show Recovery Phrase',
-            onPress: () => showRecoveryPhrase(wallet.mnemonic),
-          },
-        ]
-      );
+      // Store the recovery phrase and show the modal
+      setRecoveryPhrase(wallet.mnemonic);
+      setShowRecoveryModal(true);
+      
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create wallet');
     } finally {
@@ -89,17 +89,37 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
     }
   };
 
+  const copyToClipboard = async () => {
+    try {
+      Clipboard.setString(recoveryPhrase);
+      Alert.alert('Copied!', 'Recovery phrase copied to clipboard');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to copy to clipboard');
+    }
+  };
+
+  const shareRecoveryPhrase = async () => {
+    try {
+      const message = `My Blockcerts Wallet Recovery Phrase:\n\n${recoveryPhrase}\n\nIMPORTANT: Keep this phrase secure and private. Anyone with access to this phrase can access your wallet.`;
+      
+      await Share.share({
+        message: message,
+        title: 'Wallet Recovery Phrase',
+      });
+    } catch (error) {
+      console.error('Error sharing recovery phrase:', error);
+    }
+  };
+
+  const handleRecoveryPhraseConfirmed = () => {
+    setShowRecoveryModal(false);
+    setRecoveryPhrase('');
+    onWalletCreated();
+  };
+
   const showRecoveryPhrase = (phrase: string) => {
-    Alert.alert(
-      'Recovery Phrase',
-      `IMPORTANT: Write down these 12 words in order and store them safely:\n\n${phrase}\n\nAnyone with access to this phrase can access your wallet.`,
-      [
-        {
-          text: 'I have saved it',
-          onPress: onWalletCreated,
-        },
-      ]
-    );
+    setRecoveryPhrase(phrase);
+    setShowRecoveryModal(true);
   };
 
   return (
@@ -193,6 +213,59 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Recovery Phrase Modal */}
+      <Modal
+        visible={showRecoveryModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <ScrollView contentContainerStyle={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Icon name="security" size={60} color="#4CAF50" />
+                <Text style={styles.modalTitle}>Wallet Created Successfully!</Text>
+                <Text style={styles.modalSubtitle}>
+                  Save your recovery phrase securely. You'll need it to restore your wallet.
+                </Text>
+              </View>
+
+              <View style={styles.recoveryPhraseContainer}>
+                <Text style={styles.recoveryPhraseLabel}>Recovery Phrase:</Text>
+                <View style={styles.recoveryPhraseBox}>
+                  <Text style={styles.recoveryPhraseText}>{recoveryPhrase}</Text>
+                </View>
+                
+                <Text style={styles.warningText}>
+                  ⚠️ Anyone with access to this phrase can access your wallet. Keep it safe and private!
+                </Text>
+              </View>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
+                  <Icon name="content-copy" size={24} color="#2196F3" />
+                  <Text style={styles.actionButtonText}>Copy</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionButton} onPress={shareRecoveryPhrase}>
+                  <Icon name="share" size={24} color="#2196F3" />
+                  <Text style={styles.actionButtonText}>Share</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Button
+                title="I have saved my recovery phrase"
+                onPress={handleRecoveryPhraseConfirmed}
+                buttonStyle={styles.confirmButton}
+                titleStyle={styles.confirmButtonText}
+                icon={<Icon name="check-circle" size={20} color="white" />}
+              />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -273,6 +346,115 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    margin: 20,
+    maxHeight: '80%',
+    width: '90%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalContent: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginTop: 15,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  recoveryPhraseContainer: {
+    width: '100%',
+    marginBottom: 25,
+  },
+  recoveryPhraseLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  recoveryPhraseBox: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderColor: '#e9ecef',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 15,
+  },
+  recoveryPhraseText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontFamily: 'monospace',
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#ff6b35',
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 25,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    minWidth: 100,
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#2196F3',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    minWidth: 250,
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

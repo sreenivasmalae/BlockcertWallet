@@ -19,6 +19,7 @@ const ScanScreen: React.FC = () => {
   const navigation = useNavigation();
   const [scanning, setScanning] = useState(true);
   const [scanned, setScanned] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // Add processing lock
   
   const { hasPermission, requestPermission } = useCameraPermission();
   const devices = useCameraDevices();
@@ -27,7 +28,7 @@ const ScanScreen: React.FC = () => {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13'],
     onCodeScanned: (codes) => {
-      if (codes.length > 0 && scanning && !scanned) {
+      if (codes.length > 0 && scanning && !scanned && !isProcessing) {
         handleBarCodeRead(codes[0]);
       }
     },
@@ -42,6 +43,7 @@ const ScanScreen: React.FC = () => {
   const resetScan = useCallback(() => {
     setScanned(false);
     setScanning(true);
+    setIsProcessing(false); // Reset processing lock
   }, []);
 
   const importCredential = useCallback(async (credentialData: string) => {
@@ -540,8 +542,14 @@ const ScanScreen: React.FC = () => {
   }, [resetScan]);
 
   const handleBarCodeRead = useCallback(async (barcode: any) => {
-    if (scanned) return;
+    // Prevent multiple simultaneous processing
+    if (scanned || isProcessing) {
+      console.log('Scan already in progress, ignoring...');
+      return;
+    }
     
+    console.log('Starting QR code processing...');
+    setIsProcessing(true); // Lock immediately
     setScanned(true);
     setScanning(false);
 
@@ -687,8 +695,12 @@ const ScanScreen: React.FC = () => {
         'Failed to process the QR code data.',
         [{ text: 'OK', onPress: resetScan }]
       );
+    } finally {
+      // Always release the processing lock
+      setIsProcessing(false);
+      console.log('QR code processing completed');
     }
-  }, [scanned, resetScan, fetchCredentialFromUrl, importCredential, handleAddIssuerFromQR, handleCredentialImportFromQR]);
+  }, [scanned, isProcessing, resetScan, fetchCredentialFromUrl, importCredential, handleAddIssuerFromQR, handleCredentialImportFromQR]);
 
   if (!hasPermission) {
     return (
@@ -736,7 +748,7 @@ const ScanScreen: React.FC = () => {
         <Camera
           style={styles.camera}
           device={device}
-          isActive={scanning}
+          isActive={scanning && !isProcessing}
           codeScanner={codeScanner}
         >
           <View style={styles.overlay}>
@@ -746,18 +758,32 @@ const ScanScreen: React.FC = () => {
               <View style={styles.cornerBottomLeft} />
               <View style={styles.cornerBottomRight} />
             </View>
+            
+            {/* Processing Overlay */}
+            {isProcessing && (
+              <View style={styles.processingOverlay}>
+                <View style={styles.processingContainer}>
+                  <Icon name="hourglass-empty" size={40} color="#2196F3" />
+                  <Text style={styles.processingText}>Processing QR Code...</Text>
+                  <Text style={styles.processingSubtext}>Please wait</Text>
+                </View>
+              </View>
+            )}
           </View>
         </Camera>
       </View>
 
       <View style={styles.footer}>
-        {scanned && (
+        {(scanned || isProcessing) && !isProcessing && (
           <Button
             title="Scan Again"
             onPress={resetScan}
             buttonStyle={styles.scanButton}
             icon={<Icon name="refresh" size={20} color="white" />}
           />
+        )}
+        {isProcessing && (
+          <Text style={styles.subtitle}>Processing QR Code...</Text>
         )}
       </View>
     </SafeAreaView>
@@ -864,6 +890,36 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 30,
     marginTop: 20,
+  },
+  processingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 12,
+    padding: 30,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  processingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 15,
+    textAlign: 'center',
+  },
+  processingSubtext: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+    textAlign: 'center',
   },
 });
 
