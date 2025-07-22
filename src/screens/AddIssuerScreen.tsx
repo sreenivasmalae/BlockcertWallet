@@ -10,8 +10,8 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Header from '../components/Header';
 import { StorageService, IssuerDetails } from '../services/StorageService';
 import { WalletService } from '../services/WalletService';
 import { useNavigation } from '../hooks/useNavigation';
@@ -221,14 +221,12 @@ const AddIssuerScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Issuer</Text>
-        <View style={styles.headerRight} />
-      </View>
+    <View style={styles.container}>
+      <Header
+        title="Add Issuer"
+        showBackButton={true}
+        onBackPress={handleCancel}
+      />
       
       <KeyboardAvoidingView
         style={styles.content}
@@ -297,7 +295,7 @@ const AddIssuerScreen: React.FC = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -305,31 +303,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 40,
   },
   content: {
     flex: 1,

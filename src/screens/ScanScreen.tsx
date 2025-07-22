@@ -6,10 +6,10 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@rneui/themed';
 import { Camera, useCameraDevices, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Header from '../components/Header';
 import { CredentialService } from '../services/CredentialService';
 import { useNavigation } from '../hooks/useNavigation';
 
@@ -704,7 +704,12 @@ const ScanScreen: React.FC = () => {
 
   if (!hasPermission) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header 
+          title="Scan QR Code"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
         <View style={styles.centerContainer}>
           <Icon name="camera-alt" size={80} color="#ccc" />
           <Text style={styles.title}>Camera Permission Required</Text>
@@ -717,13 +722,18 @@ const ScanScreen: React.FC = () => {
             buttonStyle={styles.permissionButton}
           />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!device) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header 
+          title="Scan QR Code"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
         <View style={styles.centerContainer}>
           <Icon name="camera-alt" size={80} color="#ccc" />
           <Text style={styles.title}>No Camera Available</Text>
@@ -731,14 +741,19 @@ const ScanScreen: React.FC = () => {
             Cannot access camera device
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Scan QR Code</Text>
+    <View style={styles.container}>
+      <Header 
+        title="Scan QR Code"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+      />
+      
+      <View style={styles.content}>
         <Text style={styles.subtitle}>
           Point your camera at a QR code to import credentials or add trusted issuers
         </Text>
@@ -786,7 +801,7 @@ const ScanScreen: React.FC = () => {
           <Text style={styles.subtitle}>Processing QR Code...</Text>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -795,16 +810,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  content: {
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-  },
-  header: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   title: {
     fontSize: 24,

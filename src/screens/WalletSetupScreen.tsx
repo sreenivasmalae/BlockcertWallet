@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
+  TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Modal,
-  TouchableOpacity,
+  Alert,
   Share,
+  Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, Card } from '@rneui/themed';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Button } from '@rneui/themed';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { CustomHeader } from '../components/common/CustomHeader';
 import { WalletService } from '../services/WalletService';
 
 interface WalletSetupScreenProps {
@@ -30,6 +31,8 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
   const [showImport, setShowImport] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validatePassword = (): boolean => {
     if (password.length < 8) {
@@ -117,98 +120,158 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
     onWalletCreated();
   };
 
-  const showRecoveryPhrase = (phrase: string) => {
-    setRecoveryPhrase(phrase);
-    setShowRecoveryModal(true);
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <CustomHeader
+        showLogo={true}
+        title="Perpetual"
+        subtitle="Brilliance. Trust. Perpetual"
+        backgroundColor="#ffffff"
+      />
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <Icon name="account-balance-wallet" size={80} color="#2196F3" />
-            <Text style={styles.title}>Welcome to Blockcerts Wallet</Text>
+          <View style={styles.titleSection}>
+            <Text style={styles.mainTitle}>
+              {showImport ? 'Import Existing Wallet' : 'Create New Wallet'}
+            </Text>
             <Text style={styles.subtitle}>
-              Secure storage for your digital credentials
+              {showImport 
+                ? 'Restore your wallet using your recovery phrase'
+                : 'Set up your secure digital wallet to store your certificates'
+              }
             </Text>
           </View>
 
-          <Card containerStyle={styles.card}>
-            <Text style={styles.cardTitle}>
-              {showImport ? 'Import Existing Wallet' : 'Create New Wallet'}
-            </Text>
+          <View style={styles.formSection}>
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Create a strong password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                  accessibilityRole="button"
+                >
+                  <Icon 
+                    name={showPassword ? "visibility" : "visibility-off"} 
+                    size={24} 
+                    color="#6B7280" 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <Input
-              placeholder="Enter a strong password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              leftIcon={<Icon name="lock" size={24} color="gray" />}
-              containerStyle={styles.inputContainer}
-            />
-
-            <Input
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              leftIcon={<Icon name="lock" size={24} color="gray" />}
-              containerStyle={styles.inputContainer}
-            />
+            {/* Confirm Password Input */}
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  accessibilityLabel={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  accessibilityRole="button"
+                >
+                  <Icon 
+                    name={showConfirmPassword ?  "visibility" : "visibility-off" } 
+                    size={24} 
+                    color="#6B7280" 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {showImport && (
-              <Input
-                placeholder="Enter your 12-word recovery phrase"
-                value={mnemonic}
-                onChangeText={setMnemonic}
-                multiline
-                numberOfLines={3}
-                leftIcon={<Icon name="vpn-key" size={24} color="gray" />}
-                containerStyle={styles.inputContainer}
-              />
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.textInput, styles.multilineInput]}
+                  placeholder="Enter your 12-word recovery phrase"
+                  value={mnemonic}
+                  onChangeText={setMnemonic}
+                  multiline
+                  numberOfLines={3}
+                  autoCapitalize="none"
+                />
+              </View>
             )}
+          </View>
 
-            {showImport ? (
-              <Button
-                title="Import Wallet"
-                onPress={handleImportWallet}
-                loading={isImporting}
-                disabled={isImporting}
-                buttonStyle={[styles.button, styles.primaryButton]}
-                titleStyle={styles.buttonText}
-              />
-            ) : (
-              <Button
-                title="Create Wallet"
-                onPress={handleCreateWallet}
-                loading={isCreating}
-                disabled={isCreating}
-                buttonStyle={[styles.button, styles.primaryButton]}
-                titleStyle={styles.buttonText}
-              />
-            )}
+          {!showImport && (
+            <View style={styles.infoSection}>
+              <View style={styles.infoHeader}>
+                <Icon 
+                  name="security" 
+                  size={24} 
+                  color="#2563EB" 
+                  style={styles.infoIcon}
+                />
+                <Text style={styles.infoTitle}>Secure Wallet Creation</Text>
+              </View>
+              <Text style={styles.infoDescription}>
+                Your wallet will be encrypted using advanced cryptography and secured with blockchain technology. 
+                Your private keys are stored locally and never shared with our servers.
+              </Text>
+            </View>
+          )}
 
-            <Button
-              title={showImport ? 'Create New Wallet Instead' : 'Import Existing Wallet'}
+          <View style={styles.buttonSection}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={showImport ? handleImportWallet : handleCreateWallet}
+              disabled={isCreating || isImporting}
+            >
+              <Text style={styles.primaryButtonText}>
+                {showImport 
+                  ? (isImporting ? 'Importing...' : 'Import Wallet')
+                  : (isCreating ? 'Creating...' : 'Create Wallet')
+                }
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
               onPress={() => {
                 setShowImport(!showImport);
                 setMnemonic('');
                 setPassword('');
                 setConfirmPassword('');
               }}
-              type="clear"
-              titleStyle={styles.switchButtonText}
-              containerStyle={styles.switchButton}
-            />
-          </Card>
+            >
+              <Icon 
+                name={showImport ? "add" : "download"} 
+                size={20} 
+                color="#8B5CF6" 
+              />
+              <Text style={styles.secondaryButtonText}>
+                {showImport ? 'Create New Wallet Instead' : 'Import Existing Wallet'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Your wallet will be encrypted and stored securely on this device.
+              By creating a wallet, you agree to our{' '}
+              <Text style={styles.footerLink}>Terms of Service</Text>{' '}
+              and{' '}
+              <Text style={styles.footerLink}>Privacy Policy</Text>
             </Text>
           </View>
         </ScrollView>
@@ -266,23 +329,169 @@ const WalletSetupScreen: React.FC<WalletSetupScreenProps> = ({ onWalletCreated }
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    padding: 24,
+    paddingTop: 32,
   },
+  // Main Title Section
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  mainTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 16,
+  },
+  // Form Section
+  formSection: {
+    marginBottom: 32,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+  },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  eyeIcon: {
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+  },
+  multilineInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  // Info Section
+  infoSection: {
+    backgroundColor: '#EBF8FF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoIcon: {
+    marginRight: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E40AF',
+  },
+  infoDescription: {
+    fontSize: 14,
+    color: '#1E40AF',
+    lineHeight: 20,
+  },
+  // Buttons
+  buttonSection: {
+    marginBottom: 24,
+  },
+  primaryButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8B5CF6',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+    borderRadius: 12,
+    paddingVertical: 14,
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#8B5CF6',
+    marginLeft: 8,
+  },
+  // Footer
+  footer: {
+    alignItems: 'center',
+    paddingBottom: 32,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  footerLink: {
+    color: '#2563EB',
+    textDecorationLine: 'underline',
+  },
+  // Legacy styles for compatibility
   header: {
     alignItems: 'center',
     marginBottom: 30,
@@ -292,12 +501,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginTop: 20,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 10,
     textAlign: 'center',
   },
   card: {
@@ -315,16 +518,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
-  inputContainer: {
-    marginBottom: 10,
-  },
   button: {
     borderRadius: 25,
     paddingVertical: 12,
     marginTop: 10,
-  },
-  primaryButton: {
-    backgroundColor: '#2196F3',
   },
   buttonText: {
     fontSize: 16,
@@ -336,16 +533,6 @@ const styles = StyleSheet.create({
   switchButtonText: {
     color: '#2196F3',
     fontSize: 14,
-  },
-  footer: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 18,
   },
   // Modal styles
   modalOverlay: {

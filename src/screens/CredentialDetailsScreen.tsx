@@ -18,8 +18,6 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Header } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { convert } from 'react-native-pdf-to-image';
@@ -27,6 +25,7 @@ import PdfThumbnail, { type ThumbnailResult } from 'react-native-pdf-thumbnail';
 // Import polyfills before blockcerts library
 import '../utils/blockcertsPolyfill';
 import { PdfCleanupService } from '../services/PdfCleanupService';
+import Header from '../components/Header';
 
 import RNFS from 'react-native-fs';
 

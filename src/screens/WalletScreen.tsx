@@ -7,17 +7,17 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Header from '../components/Header';
 import { WalletService } from '../services/WalletService';
 import { WalletData } from '../types/wallet';
 import { useNavigation } from '../hooks/useNavigation';
 
 const WalletScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const _navigation = useNavigation();
+  const [_wallet, _setWallet] = useState<WalletData | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,17 +77,19 @@ const WalletScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header />
         <View style={styles.centerContainer}>
           <Text>Loading...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!walletAddress) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header />
         <View style={styles.centerContainer}>
           <Icon name="account-balance-wallet" size={80} color="#2196F3" />
           <Text style={styles.title}>No Wallet Found</Text>
@@ -95,12 +97,13 @@ const WalletScreen: React.FC = () => {
             This shouldn't happen. Please restart the app.
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Header />
       <ScrollView style={styles.scrollView}>
         <Card containerStyle={styles.walletCard}>
           <View style={styles.walletHeader}>
@@ -129,7 +132,7 @@ const WalletScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -137,6 +140,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  headerButton: {
+    padding: 8,
   },
   centerContainer: {
     flex: 1,
